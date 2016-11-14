@@ -34,6 +34,28 @@ bool isCreatedByMe(){
 	
 }
 
+bool checkPwd(){
+	int msg = system("kinit");
+	std::cout << msg << std::endl;
+
+	return true;
+}
+
+bool checkSniff(){
+
+	// Step 3
+	struct stat sniff;
+	if(stat("./sniff", &sniff) != 0){
+		std::cout << "sniff not found" << std::endl;
+		return false;
+	}
+
+	//Step 4
+	
+
+	return true;
+}
+
 int main()
 {	
 	// Step 1: Compare real UID of the process to the student
@@ -43,8 +65,17 @@ int main()
 	}
 
 	// Step 2: Check password
-	int msg = system("kinit");
-	std::cout << msg << std::endl;
+	if(!checkPwd()){
+		
+		return 0;
+	}
+
+	// Step 3,4,5: Check sniff existence, ownership and modification time
+	if(!checkSniff()){
+		
+		return 0;
+	}
+
 
 
 	std::cout << "Success" << std::endl;
