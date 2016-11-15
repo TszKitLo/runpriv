@@ -37,9 +37,14 @@ bool isCreatedByMe(){
 
 bool checkPwd(){
 	int msg = system("kinit");
-	std::cout << msg << std::endl;
+	
+	if(msg == 0){
+		return true;
+	} else {
+		return false;
+	}
 
-	return true;
+
 }
 
 bool checkSniff(){
@@ -47,7 +52,7 @@ bool checkSniff(){
 	// Step 3
 	struct stat sniff;
 	if(stat("./sniff", &sniff) != 0){
-		std::cout << "sniff not found" << std::endl;
+		std::cout << "Sniff not found" << std::endl;
 		return false;
 	}
 
@@ -56,29 +61,40 @@ bool checkSniff(){
 	if(sniff.st_uid != getuid()){
 		std::cout << "Sniff is not owned by you" << std::endl;
 		return false;
+	} else {
+
+		// if user is not root
+		if(getuid() != 0){
+			// check others rights
+			if(sniff.st_mode & S_IRWXO || sniff.st_mode & S_IROTH || sniff.st_mode & S_IWOTH || sniff.st_mode & S_IXOTH){
+				std::cout << "Sniff should be excuted by owner only" << std::endl;
+				return false;
+			}
+		}
 	}
 
 	// check owner execution right
-	if((sniff.st_mode & S_IXUSR) || (sniff.st_mode & S_IRWXU)){
-        std::cout << "Sniff cannot be excuted by owner" << std::endl;
-		return false;
+	bool canExecute = false;
+	if(sniff.st_mode & S_IRWXU){
+        canExecute= true;
     }
-
-    // if user is not root
-    if(getuid() != 0){
-    	// check others rights
-    	if(sniff.st_mode & S_IRWXO || sniff.st_mode & S_IROTH || sniff.st_mode & S_IWOTH || sniff.st_mode & S_IXOTH){
-    		std::cout << "Sniff can be excuted by owner only" << std::endl;
-			return false;
-    	}
+    
+    if(sniff.st_mode & S_IXUSR){
+        canExecute = true;
     }
+    
+    if(!canExecute){
+		std::cout << "Sniff cannot be excuted by owner" << std::endl;
+		return false;	
+	}
 
     //Step 5
     time_t currentTime;
 	time(&currentTime);
-
-    if(difftime(currentTime, sniff.st_mtime) > 60){
-    	std::cout << "Sniff is modified or reacted 1 minute ago" << std::endl;
+	double diff = difftime(currentTime, sniff.st_mtime);
+	
+    if(diff > 60){
+    	std::cout << "Sniff is modified or created over 1 minute ago" << std::endl;
 		return false;
     }
     
@@ -89,11 +105,16 @@ bool checkSniff(){
 void chmodOwn(){
 	// chown
 	int msg = system("chown root:proj sniff");
-	std::cout << msg << std::endl;
+	
+	if(msg != 0){
+		std::cout << "\nChown error result: " << msg << std::endl;
+		return;
+	}
 
 	// chmod
 	if(chmod("./sniff",04550) != 0){
 		std::cout << "Chmod error!" << std::endl;
+		return;
 	}
 }
 
