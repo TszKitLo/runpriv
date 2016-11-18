@@ -107,7 +107,7 @@ void chmodOwn(){
 	int msg = system("chown root:proj sniff");
 	
 	if(msg != 0){
-		std::cout << "\nChown error result: " << msg << std::endl;
+		std::cout << "\nsystem return value: " << msg << std::endl;
 		return;
 	}
 
